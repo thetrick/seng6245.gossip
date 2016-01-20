@@ -1,2 +1,2 @@
 # seng6245.gossip
-An abc player that plays an abc file, by parsing it and feeding it to the Java Midi API. For East Carolina University's SENG 6245 Spring 2016.
+An instant messaging application that supports real-time text-based chat communication over a network. For East Carolina University's SENG 6245 Spring 2016.
