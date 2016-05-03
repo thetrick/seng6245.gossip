@@ -8,8 +8,8 @@ import java.net.Socket;
 import adts.*;
 
 /**
- * This class starts a server to listen and accept channels from clients over
- * a socket channel.
+ * @author thetrick
+ * Gossip server listens and accept channels from clients over a socket connection.
  */
 public class Server
 {
@@ -18,11 +18,10 @@ public class Server
 	private final ServerNodes _serverNodes;
 
 	/*
-	 * Constructor for server binds a server to a port on the local address and
-	 * initializes lists
+	 * Constructor
+	 * Binds a server to a port on the local address
 	 * 
-	 * @param int - port -- port to bind to (0 <= int <= 65535)
-	 * 
+	 * @param int - port 0 <= int <= 65535
 	 * @throws IOException - if socket cannot be bound to port
 	 */
 	public Server(int port) throws IOException
@@ -33,18 +32,15 @@ public class Server
 	}
 
 	/*
-	 * Main loop for server listens for a channel then creates a new thread
-	 * to construct a handler for that channel as well as updates all the
-	 * lists
+	 * Orchestrates the server listening activities which includes spawning
+	 * new threads when valid channel requests are initiated
 	 */
 	public void serve()
 	{
-		System.out.println("SERVER INIT");
-		// start main loop
 		while (true)
 			try
 			{
-				System.out.println("Server waiting");
+				System.out.println("Server waiting for clients...");
 				// accepts a new socket channel
 				final Socket socket = this._serverSocket.accept();
 				// create a new thread to create a channel (so the server is
@@ -55,45 +51,41 @@ public class Server
 					{
 						try
 						{
-							System.out.println("Creating User");
-							// create a new channel handler
+							// Create a new channel
+							System.out.println("Creating Channel...");
 							Channel channel = new Channel(socket, _hive, _serverNodes);
-							System.out.println("Adding User");
-							// attempt to add the channel (client) to the
-							// list of connected clients
+							
+							// add the channel to the hive
+							System.out.println("Adding Channel for " + channel.getUserName());
 							_serverNodes.add(channel);
-							// update the client with all the available _hive
-							_hive.updateUser(channel);
-							System.out.println("Starting User");
-							// start the channel thread to start IO
+							_hive.updateChannel(channel);
+							
+							// start the channel thread
+							System.out.println("Starting Channel for " + channel.getUserName());
 							new Thread(channel).start();
-							// If there is an error (like the user already
-							// exists, or user disconnects at startup sequence)
 						}
-						catch (Exception e)
+						catch (Exception ex)
 						{
 							try
 							{
-								// try to tell the client what happened
-								new PrintWriter(socket.getOutputStream(), true).println(e.getMessage());
-								System.err.println("Error: could not run user ~ " + e.getMessage());
-								// close the channel
+								// inform the client of the issue
+								new PrintWriter(socket.getOutputStream(), true).println(ex.getMessage());
+								System.out.println("Error: could not run channel ~ " + ex.getMessage());
+								// close the socket
 								socket.close();
 							}
-							catch (IOException wtf)
+							catch (IOException iox)
 							{
-								System.err.println("I dont even know right now...");
+								System.out.println("Something bad happened!?");
 							}
 						}
 					}
 				}.start(); // start the thread to create channels
 
 			}
-			catch (IOException kill)
+			catch (IOException iox)
 			{
-				// really... this shouldnt ever be ran... really... unless
-				// something FUBAR happened.... like the world dying... or the serverSocket being closed
-				System.err.println("Oh noez the server was closed spontaneously!");
+				System.out.println("Something really bad happened!?");
 				break;
 			}
 	}
@@ -152,7 +144,7 @@ public class Server
 		System.out.println();
 		int port = -1;
 		if(args.length == 0)
-			port = 10000;
+			port = 25252;
 		else if (args.length == 2 &&  args[0].equals("-p") && isInteger(args[1]))
 			port = Integer.parseInt(args[1]);
 		else
@@ -161,7 +153,7 @@ public class Server
 		if(port >= 0 && port <= 65535)
 		{
 			System.out.println("Starting Server on port " + port);
-			Server server = new Server(10000);
+			Server server = new Server(port);
 			server.serve();
 		}
 		else

@@ -9,59 +9,59 @@ import javax.swing.*;
 import client.*;
 
 /**
- * A class representing the gui for a single chatroom. Messages are entered into a
- * text field and submitted to the server either by hitting the send button or by
- * pressing ENTER on the keyboard. The conversation is displayed in a text pane on
- * the left, and all users in the chatroom are displayed on the right. Earlier chat
- * history is displayed in the window upon the user rejoining the room, where the
- * history is defined as conversation held while the user is present in the room, and
- * rejoining is defined as entering a chatroom with the exact same name as a previously
- * entered chatroom.
- *
+ * 
+ * @author thetrick
+ * The gui representation of a chat room.  As such, it handles the activities
+ * associated with user entering rumors to send to the group of users in a particular 
+ * quorum.  The ongoing conversation is displayed in a text pan on the left while the list 
+ * of users are displayed on the right.  Any history associated with the user is continously
+ * displayed as long as the user is connected to the Quorum
  */
 public class Chat extends JPanel{
 	private static final long serialVersionUID = 1L;
-	private final JLabel chatName;
-    private final JTextPane conversation;
-    private final JList currentUsers;
-    private final JTextField myMessage;
-    private final JButton send;
-    private Client client;
-    private final String roomname;
+	private final JLabel _quorumJLabel;
+    private final JTextPane _ongoingJTextPane;
+    private final JList _quorumUsersJList;
+    private final JTextField _newMessageJTextField;
+    private final JButton _submitJButton;
+    private Client _client;
+    private final String _quorumId;
     
     /**
      * 
-     * The constructor for the ChatTab
+     * constructor
      * 
-     * @param chatname The name of the chatroom in the tab.
-     * @param main The main where the ChatTab is displayed.
+     * @param quorumId The id of the Quorum in the tab.
+     * @param main The main window where Chat is displayed.
      */
-    public Chat(String chatname, Main main) {
-    	this.roomname = chatname;
+    public Chat(String quorumId, Main main) {
+    	this._quorumId = quorumId;
         Font TitleFont = new Font("SANS_SERIF", Font.BOLD, 18);
-        chatName = new JLabel(chatname);
-        chatName.setFont(TitleFont);
-        conversation = new JTextPane();
-        conversation.setDocument(main.getCurrentRoom(chatname).getDoc());
-        currentUsers = new JList(main.getCurrentRoom(chatname).getUserListModel());
-        myMessage = new JTextField();
-        send = new JButton("Submit");
-        this.client = main.getClient();
-        setName(chatname);
+        _quorumJLabel = new JLabel(quorumId);
+        _quorumJLabel.setFont(TitleFont);
+        _ongoingJTextPane = new JTextPane();
+        _ongoingJTextPane.setDocument(main.getCurrentQuorum(quorumId).getDefaultStyledDocument());
+        _quorumUsersJList = new JList(main.getCurrentQuorum(quorumId).getUsers());
+        _newMessageJTextField = new JTextField();
+        _submitJButton = new JButton("Submit");
+        this._client = main.getClient();
+        setName(quorumId);
         
-        conversation.setEditable(false);
-        JScrollPane chatScroll = new JScrollPane (conversation);
+        _ongoingJTextPane.setEditable(false);
+        JScrollPane chatScroll = new JScrollPane (_ongoingJTextPane);
         chatScroll.setPreferredSize(new Dimension(700, 550));
-        JScrollPane userScroll = new JScrollPane (currentUsers);
+        JScrollPane userScroll = new JScrollPane (_quorumUsersJList);
         userScroll.setPreferredSize(new Dimension(250, 550));
         
-        send.addActionListener(new ActionListener() {
+        // Call sendMessage when the Submit Button is clicked
+        _submitJButton.addActionListener(new ActionListener() {
             public void actionPerformed (ActionEvent e) {
                 sendMessage();
             }
         });
 
-        myMessage.addKeyListener(new KeyAdapter() {
+        // Call sendMessage when the Enter button is pressed
+        _newMessageJTextField.addKeyListener(new KeyAdapter() {
 
             public void keyPressed(KeyEvent event) {
                 if (event.getKeyCode() == KeyEvent.VK_ENTER)
@@ -69,45 +69,43 @@ public class Chat extends JPanel{
             }
         });
         
-        //defining the layout
         GroupLayout layout = new GroupLayout(this);
         this.setLayout(layout);
         
-        //setting some margins around our components
         layout.setAutoCreateGaps(true);
         layout.setAutoCreateContainerGaps(true);
         
-        //organizing components
         layout.setVerticalGroup(layout.createSequentialGroup()
-                .addComponent(chatName)
+                .addComponent(_quorumJLabel)
                 .addGroup(layout.createParallelGroup()
                         .addComponent(chatScroll)
                         .addComponent(userScroll))
                 .addGroup(layout.createParallelGroup()
-                        .addComponent(myMessage, GroupLayout.PREFERRED_SIZE, 
+                        .addComponent(_newMessageJTextField, GroupLayout.PREFERRED_SIZE, 
                                 GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                        .addComponent(send)));
+                        .addComponent(_submitJButton)));
         
         layout.setHorizontalGroup(layout.createParallelGroup()
                 .addGroup(layout.createSequentialGroup()
                         .addContainerGap(15, 22)
-                        .addComponent(chatName))
+                        .addComponent(_quorumJLabel))
                 .addGroup(layout.createSequentialGroup()
                         .addComponent(chatScroll)
                         .addComponent(userScroll))
                 .addGroup(layout.createSequentialGroup()
-                        .addComponent(myMessage)
-                        .addComponent(send)));
+                        .addComponent(_newMessageJTextField)
+                        .addComponent(_submitJButton)));
     }
     
     /**
-     * Used to send a message to the client (which will pass it on to the server)
+     * Push the message to the client which orchestrates
+     * the activities to send to the server.
      */
     private void sendMessage() {
-        String m = myMessage.getText();
-        if (m != null && m.length() > 0) {
-            client.send("message " + roomname + " " + m);
-            myMessage.setText("");
+        String message = _newMessageJTextField.getText();
+        if (message != null && message.length() > 0) {
+            _client.send("message " + _quorumId + " " + message);
+            _newMessageJTextField.setText("");
         }
     }
 }

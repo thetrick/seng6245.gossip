@@ -1,13 +1,18 @@
 package client;
 
+/**
+ * 
+ * @author thetrick
+ * Model class used to represent a particular message
+ */
 public class Rumor {
     private final String _userName;
     private final String _message;
     
     /**
      * Constructor method
-     * @param u user String
-     * @param m msg String
+     * @param String - User Name
+     * @param String - Message
      */
     public Rumor(String userName, String message) 
     {

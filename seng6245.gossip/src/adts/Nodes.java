@@ -1,7 +1,5 @@
 package adts;
 
-//import static server.TestHelpers.pause;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,76 +9,66 @@ import java.util.Map;
 import server.Channel;;
 
 /**
- * this class is a generic class that constructs a list of channels
- * (clients) it defines methods to add, remove, and other list stuff as well as
- * the ability to message the entire list.
+ * base class used to construct a list of channels
+ * handles the plumbing of orchestrating activities associated with the channels
  */
 
 public abstract class Nodes
 {
-	// Contains a Map of usernames to the appropriate Channel
-	// For the server to use in general
+	// Maps the users to channels
 	private Map<String, Channel> Nodes;
-	// boolean for if this list is being tested for concurrency
-	// this boolean will delay some methods from executing.
 
 	/*
-	 * constructor for a list of Nodes - just initializes the mapping of Nodes
+	 * Constructor
 	 */
 	public Nodes()
 	{
-		Nodes = new HashMap<String, Channel>();
-	}
-
-	public Nodes(boolean testing)
-	{
+		// Initializes the mapping of Nodes
 		Nodes = new HashMap<String, Channel>();
 	}
 
 	/*
-	 * adds a user to this list (channel) if the user already exists,
-	 * throw an exception if any change is made to the list, inform everyone on
-	 * the list of the change.
+	 * adds a channel to the list of nodes
+	 * throw an exception if the channel's user already exists within another channel
+	 * notifies all channels of the action
 	 * 
-	 * @param channel - the client to be added
+	 * @param channel - the channel to be added
 	 * 
-	 * @throws IOException - if the user already exists in this list
+	 * @throws IOException - if the user associated with the channel already exists throw error
 	 */
 	public void add(Channel channel) throws IOException
 	{
 		synchronized (Nodes)
 		{
-//			pause(1000, testing);
 			if (this.contains(channel.getUserName()))
-				throw new IOException("Username Already Exists");
+				throw new IOException("The user associated with this channel already exists.");
 			Nodes.put(channel.getUserName(), channel);
-			informAll(getList());
+			notifyChannels(getList());
 			return;
 		}
 	}
 
 	/*
-	 * removes a channel from this list and informs everone
+	 * removes a channel and inform the group
 	 * 
-	 * @param channel - user to remove
+	 * @param channel - The channel that needs to be removed
 	 */
 	public void remove(Channel channel)
 	{
 		synchronized (Nodes)
 		{
 			Nodes.remove(channel.getUserName());
-			informAll(getList());
-//			pause(1000, testing);
+			notifyChannels(getList());
 			return;
 		}
 	}
 
 	/*
-	 * returns true if the user is in this list
+	 * returns true if the user is already registered with another channel
 	 * 
-	 * @param String - username in question
+	 * @param String - userName to check
 	 * 
-	 * @return boolean - if the user is in this list
+	 * @return boolean - true if userName already exists
 	 */
 	public boolean contains(String userName)
 	{
@@ -94,25 +82,26 @@ public abstract class Nodes
 	 */
 	protected String getList()
 	{
-		if (size() <= 0)
+		if (this.size() <= 0)
 			return "";
-		StringBuilder output = new StringBuilder("");
-		ArrayList<String> copy = new ArrayList<String>();
+		
+		StringBuilder stringBuilder = new StringBuilder("");
+		ArrayList<String> users = new ArrayList<String>();
 		for (String NodesString : Nodes.keySet())
 		{
 			String s = new String(NodesString);
-			copy.add(s);
+			users.add(s);
 		}
-		Collections.sort(copy);
-		for (String s : copy)
-			output.append(s + " ");
-		return output.substring(0, output.length() - 1);
+		Collections.sort(users);
+		for (String user : users)
+			stringBuilder.append(user + " ");
+		return stringBuilder.substring(0, stringBuilder.length() - 1);
 	}
 
 	/*
-	 * accessor for how big the list is
+	 * Identifies the size of the channel list
 	 * 
-	 * @return int - size of list
+	 * @return int - size of the channel list
 	 */
 	public int size()
 	{
@@ -120,26 +109,30 @@ public abstract class Nodes
 	}
 
 	/*
-	 * method to inform everyone on this list with a message creates a copy of
-	 * the Nodes to prevent concurrency/locking
-	 * 
-	 * @param String - message to be sent to everyone
+	 * provides a mechanism to send all channels a message
+	 *  
+	 * @param String - the message we want to send to everyone
 	 */
-	public void informAll(String message)
+	public void notifyChannels(String message)
 	{
-		Channel[] NodesCopy;
-		// make a copy of the list to work with, this way it frees up the lock
-		// sooner
+		// need a temporary array of channels to store a copy
+		Channel[] channelsCopy;
+		// populate the temporary array with a copy of the channels
 		synchronized (Nodes)
 		{
-			NodesCopy = Nodes.values().toArray(new Channel[0]);
+			channelsCopy = Nodes.values().toArray(new Channel[0]);
 		}
-		// send the message to every channel
-		for (Channel node : NodesCopy)
+		
+		// notify all the channels by sending it a message
+		for (Channel node : channelsCopy)
 			node.updateBuffer(message);
 	}
 
-	public Map<String, Channel> getMap()
+	/*
+	 * Return the underlying Map containing users to channels
+	 * @return the Map between users and channels
+	 */
+	public Map<String, Channel> getNodesMap()
 	{
 		return this.Nodes;
 	}

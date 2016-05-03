@@ -5,18 +5,18 @@ import java.io.IOException;
 import server.Channel;
 
 /*
- * This class extends the abstract class userList and overrites the default constructor and 
- * getList method
+ * Extends the base class Nodes
  */
 public class ClientNodes extends Nodes
 {
 
+	// used to track the name of node list
 	private final String name;
 
 	/*
-	 * constructor for this field for defining the name of the chat list
+	 * constructor
 	 * 
-	 * @param String - name of the list
+	 * @param String - name of the user list
 	 */
 	public ClientNodes(String name)
 	{
@@ -25,30 +25,33 @@ public class ClientNodes extends Nodes
 	}
 
 	/*
-	 * overrites the default getList method and appends "chatUserList" and the
-	 * name to the beginning of the list
+	 * appends "ClientNodes (" + this.name + "): "  to the underlying list of nodes
 	 */
+	@Override
 	protected String getList()
 	{
 		String list = super.getList();
-		return "chatUserList " + this.name + " " + list;
+		return "ClientNodes (" + this.name + "): " + list;
 	}
 	
 	/*
-	 * overrides the 
+	 * adds a channel to the list of nodes
+	 * handles the exception if the channel's user already exists in another channel
 	 */
+	@Override
 	public void add(Channel channel) throws IOException
 	{
 		try
 		{
 			super.add(channel);
 		}
-		catch (IOException e)
+		catch (IOException ioEx)
 		{
-			if(e.getMessage().equals("Username Already Exists"))
-				throw new IOException("User already in Chatroom");
-			else
-				throw e;
+			if(ioEx.getMessage().equals("The user associated with this channel already exists.")) {
+				throw new IOException("The user already exist in the Channel.");
+			} else {
+				throw ioEx;
+			}
 		}
 	}
 }

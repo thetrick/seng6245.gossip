@@ -5,10 +5,10 @@ import javax.swing.*;
 import gui.*;
 
 /**
- * Complete chat organizes the _loginWindow, the _mainWindow,
- * and the Client all together.  The complete chat begins
- * the entire client workable from the GUI.
- *
+ * 
+ * @author thetrick
+ * Main organizer as Gossip marries all the login window, main window and 
+ * client together into a cohesive gui.
  */
 public class Gossip {
 
@@ -21,17 +21,16 @@ public class Gossip {
      * Constructor
      */
     public Gossip() {
-        _main = new Main();
-        _login = new Login(this._main);
+        this._main = new Main();
+        this._login = new Login(this._main);
     }
     
     /**
-     * The start method starts the _main window which opens
-     * the _login window dialog which does not return until
-     * a valid client is found.  Attempts to make a client
-     * will continue until one is found.  Then the _main
-     * window will begin and the input/output stream between
-     * client and server will continue properly.
+     * When opening the Main Window, the Login Window is opened
+     * which grabs a client.  Please note that the Login Window will not 
+     * return until a client has been found...
+     * Once, the user has logged in, then the Main Window will orchestrate
+     * all activities between client/server. 
      */
     public void start() {
         SwingUtilities.invokeLater(new Runnable() {
@@ -41,7 +40,7 @@ public class Gossip {
                 _main.setVisible(true);
                 _client = _login.getClient();
                 if (_client == null) {
-                    System.out.println("closed _login window");
+                    System.out.println("Login window has been closed...");
                     _main.dispose();
                 }
                 else {

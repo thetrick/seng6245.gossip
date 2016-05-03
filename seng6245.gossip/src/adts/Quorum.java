@@ -1,173 +1,163 @@
 package adts;
 
-
-/**
- * This class implement a fixture representing a 'chat room' that allows channel handlers(clients) to communicate with each other
- * This room will remain active as long as there exists a user in the room. upon the last user leaving, the room will deregister it_thread from the listings and 
- * disable it_thread. 
- * 
- */
-
 import java.io.IOException;
 import java.util.concurrent.LinkedBlockingQueue;
-
 import server.Channel;
 
+/**
+ * The Quorum represents a gathering of channels or individual users who
+ * come together to chat or communicate with each other. As long as one channel
+ * is associated with the Quorum, then the Quorum will stay alive. Once, the last 
+ * channel has left the Quorum, then the Quorum will interrupt its associated thread
+ * and remove itself from the Hive.
+ */
 public class Quorum implements Runnable
 {
-	public final String name;
+	public final String Id;
 	private final Hive _hive;
 	private final ClientNodes _clientNodes;
-	// input buffer into this chat room for concurrency
 	private LinkedBlockingQueue<String> _buffer = new LinkedBlockingQueue<String>();
-	// a consumer thread for the above buffer
 	private Thread _thread;
-	private boolean alive = true;
+	private boolean _alive = true;
 
 	/*
-	 * constructor for Chat room - will attempt to add _thread to the room listing,
-	 * and will throw an exception if it cant(like if the room exists)
+	 * Main constructor for Quorum
+	 * Performs the necessary activities needed to associated a thread with the Quorum
 	 * 
-	 * @param String - name of the room Hive - pointer to the master list of
-	 * all the _hive Channel - user creating this room in order to
-	 * have at least one user.
+	 * @param String - Name of the Quorum 
+	 * @param Hive - Reference to Hive which orchestrates all Quorums
+	 * @param Channel - The initial channel to add to the Quorum (Must have at least one)
 	 * 
-	 * @throws IOException - if the room cannot be created (or added to the
-	 * master list)
+	 * @throws IOException - if Quorum already exists in the Hive or another problem exists
 	 */
 	public Quorum(String name, Hive hive, Channel channel) throws IOException
 	{
-		this.name = name;
+		this.Id = name;
 		this._hive = hive;
-		// create a new list to hold all of the connected users to this room
+		
+		// create a container to house all connected channels associated with this Quorum
 		this._clientNodes = new ClientNodes(name);
-		synchronized (_clientNodes)
+		synchronized (this._clientNodes)
 		{
-			// add this room to the listing of the _hive
-			_hive.add(this);
-			// connect the creator to the room
-			channel.updateBuffer("connectedRoom " + name);
-			_clientNodes.add(channel);
-			// construct a new thread based on it_thread
-			_thread = new Thread(this);
-			System.out.println("  Room: " + name + " - " + "Created");
-			// start this Quorum!!!!
-			_thread.start();
+			// add the quorum to the hive
+			this._hive.addQuorum(this);
+			
+			// Add the channel to the quorum
+			channel.updateBuffer("Connecting to Quorum: " + this.Id);
+			this._clientNodes.add(channel);
+						
+			// construct a new thread
+			this._thread = new Thread(this);
+			
+			System.out.println("Quorum: (" + name + ") " + "Created");
+			this._thread.start();
 		}
 	}
 
 	/*
-	 * Constructor for Quorum stub - only used for testing sets all fields
-	 * except name to null
-	 * 
+	 * constructor - only used for testing
 	 * @param String - name of room
 	 */
 	public Quorum(String name)
 	{
-		this.name = name;
+		this.Id = name;
 		this._hive = null;
 		this._clientNodes = null;
 		this._thread = null;
 	}
 
 	/*
-	 * Method that controls the main loop for the Quorum will keep looping
-	 * while this Quorum is 'alive' - at least one person is connected the
-	 * loop will block until it consumes an element from the buffer and relay
-	 * the message to all the connected buffers
+	 * Run() does all the heavy lifting of orchestrating the Quorum.
+	 * Runs in a loop checking for messages and notifying all the other channels.
+	 * As long as one channel is associated with the Quorum, it will stay alive.
 	 */
 	public void run()
 	{
-		System.out.println("  Room: " + name + " - " + "Input Thread Started");
-		// main loop
-		while (alive)
-			// read an element and inform all of the connected users using the
-			// Hive method
+		System.out.println("Quorum: " + this.Id + ": " + "Started...");
+		
+		// While the Quorum is alive, take messages from the message buffer
+		// and notify users
+		while (this._alive) {
 			try
 			{
-				_clientNodes.informAll("message " + name + " " + _buffer.take());
-				System.out.println("  Room: " + name + " - " + "Message Sent");
-				// if the thread is interrupted (on shutdown)
+				this._clientNodes.notifyChannels("Message (" + this.Id + "): " + this._buffer.take());
+				System.out.println("Quorum: (" + this.Id + ") " + "Message Sent");
 			}
-			catch (InterruptedException e)
+			catch (InterruptedException ie)
 			{
-				System.out.println("  Room: " + name + " - " + "Stopping Input Thread");
+				System.out.println("Quorum: (" + this.Id + ") " + "Stopping...");
 				// stop this loop
 				break;
 			}
-
-		System.out.println("  Room: " + name + " - " + "Stopped Input Thread");
-		// remove this room from all listings.
-		cleanup();
-		System.out.println("  Room: " + name + " - " + "Cleanup complete");
+		}
+		
+		System.out.println("Quorum: (" + this.Id + ") " + "Stopping...");
+		// remove quorum from hive
+		this.removeFromHive();
+		System.out.println("Quorum: (" + this.Id + ") " + "Removed from hive");
 	}
 
 	/*
-	 * Adds a user to this chat room
-	 * 
-	 * @param Channel - client attempting connect
-	 * 
-	 * @throws IOException - if the client cannot be added this could happen if
-	 * the client already exists or if the room is dead
+	 * adds a channel to the quorum
+	 * @param Channel - channel to add
+	 * @throws IOException - happens if the associated channel user has already connected or
+	 * 						if the Quorum does not exist.
 	 */
-	public void addUser(Channel channel) throws IOException
+	public void addChannel(Channel channel) throws IOException
 	{
 		synchronized(_clientNodes)
 		{
-			if (alive)
-			// try to add the channel
+			// determine if the quorum still lives
+			if (this._alive)
 			{
 				if (!this._clientNodes.contains(channel.getUserName()))
-					channel.updateBuffer("connectedRoom " + name);
+					channel.updateBuffer("Connecting to Quorum: " + this.Id);
 				this._clientNodes.add(channel);
+			} else {
+				throw new IOException("The Quorum no longer exists");
 			}
-			else
-				// throw an IOException if the room is dead
-				throw new IOException("Room no longer exists");
 		}
 	}
 
 	/*
 	 * removes a user from this Quorum
-	 * 
-	 * @param Channel - client to remove
+	 * @param Channel - channel with user to remove
 	 */
-	public void removeUser(Channel channel)
+	public void removeChannel(Channel channel)
 	{
 		synchronized (_clientNodes)
 		{
 			this._clientNodes.remove(channel);
-			// if there are no more channels to this room - stop the room
-			if (_clientNodes.size() <= 0)
+			// kill the quorum if there are no more users
+			if (this._clientNodes.size() <= 0)
 			{
-				alive = false;
+				this._alive = false;
 				this._thread.interrupt();
 			}
 		}
 	}
 
 	/*
-	 * cleans up this room from all the listings
+	 * remove quorum from the hive
 	 */
-	private void cleanup()
+	private void removeFromHive()
 	{
-		System.out.println("  Room: " + name + " - " + "Removing from server listing");
-		// remove this room from the master list
-		this._hive.remove(this);
+		System.out.println("Quorum: " + Id + " - " + "removed from hive.");
+		this._hive.removeQuorum(this);
 	}
 
 	/*
-	 * pushes a message into this room's message buffer
+	 * writes a message into this quorum's buffer
 	 */
-	public void updateBuffer(String info)
+	public void updateBuffer(String msg)
 	{
-		this._buffer.add(info);
+		this._buffer.add(msg);
 	}
 
 	/*
-	 * returns if this room is alive or not
+	 * returns true if the Quorum is alive
 	 * 
-	 * @return boolean - if the room is alive (active)
+	 * @return boolean - determines if the Quorum is alive
 	 */
 	public boolean isAlive()
 	{
@@ -175,9 +165,9 @@ public class Quorum implements Runnable
 	}
 
 	/*
-	 * gets the userList - for testing only
+	 * support testing
 	 * 
-	 * @return ClientNodes - list of all people on this room
+	 * @return ClientNodes - return a list users in the Quorum 
 	 */
 	public ClientNodes getList()
 	{

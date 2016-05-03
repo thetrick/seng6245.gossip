@@ -6,84 +6,90 @@ import javax.swing.*;
 import java.awt.Font;
 import java.beans.*;
 import java.io.IOException;
+import java.util.Random;
 import java.util.regex.Pattern;
 
+/**
+ * 
+ * @author thetrick
+ *
+ */
 public class Login extends JDialog implements PropertyChangeListener{
 	private static final long serialVersionUID = 1L;
-	private final JLabel welcome;
-    private final JTextField username;
-    private final JLabel usernameLabel;
-    private final JTextField ipAddress;
-    private final JLabel ipLabel;
-    private final JTextField port;
-    private final JLabel portLabel;
-    private final JLabel errorMessage;
-    private final JOptionPane loginPane;
-    private String btnString = "Submit";
-    private Client client = null;
+	private final JLabel _InitialJLabel;
+    private final JTextField _userJTextField;
+    private final JLabel _userJLabel;
+    private final JTextField _ipJTextField;
+    private final JLabel _ipJLabel;
+    private final JTextField _portJTextField;
+    private final JLabel _portJLabel;
+    private final JLabel errJLabel;
+    private final JOptionPane _loginJOptionPane;
+    private String _submitText = "Submit";
+    private Client _client = null;
 
-    //Constructor for the login window. Takes in the parent frame that the popup opesn over
+    //Constructor. 
+    // @param JFrame - container parent frame
     public Login (JFrame parent) {
-        super(parent, true); //turns on window modality
-        welcome = new JLabel("Welcome to Complete Chat!");
-        username = new JTextField(20);
-        usernameLabel = new JLabel("Username");
-        ipAddress = new JTextField(20);
-        ipLabel = new JLabel("IP Address");
-        port = new JTextField("10000", 20);
-        portLabel = new JLabel("Port Number");
+        super(parent, true);
+        Random rng = new Random();
+        String userName = "user" + rng.nextInt(25);
+        _InitialJLabel = new JLabel("Are you ready for some Gossip?");
+        _userJTextField = new JTextField(userName, 20);
+        _userJLabel = new JLabel("Username");
+        _ipJTextField = new JTextField("127.0.0.1", 20);
+        _ipJLabel = new JLabel("IP Address");
+        _portJTextField = new JTextField("25252", 20);
+        _portJLabel = new JLabel("Port Number");
         Font errorFont = new Font("SANS_SERIF", Font.BOLD, 12);
-        errorMessage = new JLabel();
-        errorMessage.setFont(errorFont);
+        errJLabel = new JLabel();
+        errJLabel.setFont(errorFont);
         JPanel panel = new JPanel();
 
-        // defining the layout
         GroupLayout layout = new GroupLayout(panel);
         panel.setLayout(layout);
 
-        //setting some margins around our components
         layout.setAutoCreateGaps(true);
         layout.setAutoCreateContainerGaps(true);
 
-        //organizing components in this view
         layout.setVerticalGroup(layout.createSequentialGroup()
-                .addComponent(welcome)
+                .addComponent(_InitialJLabel)
                 .addGroup(layout.createParallelGroup()
-                        .addComponent(usernameLabel)
-                        .addComponent(username, GroupLayout.PREFERRED_SIZE, 
+                        .addComponent(_userJLabel)
+                        .addComponent(_userJTextField, GroupLayout.PREFERRED_SIZE, 
                                 GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
                 .addGroup(layout.createParallelGroup()
-                        .addComponent(ipLabel)
-                        .addComponent(ipAddress, GroupLayout.PREFERRED_SIZE, 
+                        .addComponent(_ipJLabel)
+                        .addComponent(_ipJTextField, GroupLayout.PREFERRED_SIZE, 
                                 GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
                 .addGroup(layout.createParallelGroup()
-                        .addComponent(portLabel)
-                        .addComponent(port, GroupLayout.PREFERRED_SIZE, 
+                        .addComponent(_portJLabel)
+                        .addComponent(_portJTextField, GroupLayout.PREFERRED_SIZE, 
                                 GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-                .addComponent(errorMessage, 0, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(errJLabel, 0, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 );
         layout.setHorizontalGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                .addComponent(welcome)
+                .addComponent(_InitialJLabel)
                 .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup()
-                                .addComponent(usernameLabel)
-                                .addComponent(ipLabel)
-                                .addComponent(portLabel))
+                                .addComponent(_userJLabel)
+                                .addComponent(_ipJLabel)
+                                .addComponent(_portJLabel))
                         .addGroup(layout.createParallelGroup()
-                                .addComponent(username, GroupLayout.PREFERRED_SIZE, 
+                                .addComponent(_userJTextField, GroupLayout.PREFERRED_SIZE, 
                                         GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                                .addComponent(ipAddress, GroupLayout.PREFERRED_SIZE, 
+                                .addComponent(_ipJTextField, GroupLayout.PREFERRED_SIZE, 
                                         GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                                .addComponent(port, GroupLayout.PREFERRED_SIZE, 
+                                .addComponent(_portJTextField, GroupLayout.PREFERRED_SIZE, 
                                         GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)))
-                 .addComponent(errorMessage, 0, 10, 400)
+                 .addComponent(errJLabel, 0, 10, 400)
                 );
         
-        Object[] button = {btnString};
-        loginPane = new JOptionPane(panel, JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION, null, button, button[0]);
-        setContentPane(loginPane);
+        Object[] button = {_submitText};
+        _loginJOptionPane = new JOptionPane(panel, JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION, null, button, button[0]);
+        setContentPane(_loginJOptionPane);
         
-        loginPane.addPropertyChangeListener(this);
+        _loginJOptionPane.addPropertyChangeListener(this);
     }
     
     /**
@@ -92,48 +98,52 @@ public class Login extends JDialog implements PropertyChangeListener{
      */
     public void propertyChange(PropertyChangeEvent e) {
         String prop = e.getPropertyName();
-        if (isVisible() && (e.getSource() == loginPane) && (JOptionPane.VALUE_PROPERTY.equals(prop) 
+        if (isVisible() && (e.getSource() == _loginJOptionPane) && (JOptionPane.VALUE_PROPERTY.equals(prop) 
                 || JOptionPane.INPUT_VALUE_PROPERTY.equals(prop))) {
-            Object value = loginPane.getValue();
+            Object value = _loginJOptionPane.getValue();
             if (value == JOptionPane.UNINITIALIZED_VALUE) {
                 return;
             }
-            loginPane.setValue(JOptionPane.UNINITIALIZED_VALUE);
-            if (value == btnString) {
-                if ((username.getText() == null) || username.getText().length() < 1) {
-                    errorMessage.setText("<html>Error: Valid username required to login</html>");
+            _loginJOptionPane.setValue(JOptionPane.UNINITIALIZED_VALUE);
+            if (value == _submitText) {
+                if ((_userJTextField.getText() == null) || _userJTextField.getText().length() < 1) {
+                    errJLabel.setText("<html>Required: Username!</html>");
                 }
-                else if ((ipAddress.getText() == null) || ipAddress.getText().length() < 1) {
-                    errorMessage.setText("<html>Error: IP Address required to connect to server</html>");
+                else if ((_ipJTextField.getText() == null) || _ipJTextField.getText().length() < 1) {
+                    errJLabel.setText("<html>Required: IP Address!</html>");
                 }
-                else if ((port.getText() == null) || port.getText().length() < 1) {
-                    errorMessage.setText("<html>Error: Port number required to connect</html>");
+                else if ((_portJTextField.getText() == null) || _portJTextField.getText().length() < 1) {
+                    errJLabel.setText("<html>Required: Port Number!</html>");
                 }
                 else {
-                    if (isValidUsername(username.getText())) {
+                    if (isValidUsername(_userJTextField.getText())) {
                         try {
-                            client = new Client(username.getText(), ipAddress.getText(), 
-                                    Integer.parseInt(port.getText()));
+                            _client = new Client(_userJTextField.getText(), _ipJTextField.getText(), 
+                                    Integer.parseInt(_portJTextField.getText()));
                             setVisible(false);
                         }
                         catch (IOException except) {
-                            errorMessage.setText(except.getMessage());
+                            errJLabel.setText(except.getMessage());
                         }
                     }
                     else {
-                        errorMessage.setText("<html>Error: Username can't exceed 20 characters<br> " +
+                        errJLabel.setText("<html>Invalid: Username cannot be greater than 20 characters<br> " +
                               "or contain any whitespace</html>");
                     }
                 }
                 pack();
             }
-            else {//User closed the dialog
+            else {
                 setVisible(false);
             }
         }
     }   
     
-    //Makes sure that the username is valid in terms of syntax
+    /**
+     * performs validation on the username entered
+     * @param Username - entered by user
+     * @return boolean indicating if the user name entered is valid.
+     */
     private boolean isValidUsername(String Username) {
         String regex = "\\p{Graph}+";
         if (Pattern.matches(regex, Username) && Username.length() < 20) {
@@ -143,17 +153,16 @@ public class Login extends JDialog implements PropertyChangeListener{
     }
     
     /**
-     * Launches the login window and then returns the client object created by the
-     * window's input. If the user closes the window, null will be returned, prompting
-     * the application to shutdown.
-     * @return Client object to be used by the gui to talk to the server
+     * Fires up the Login Window so that the user can login and connect to the server.
+     * Main activity includes firing up the client object.
+     * @return The client object to be used by the Main Window to talk with server
      */
     public Client getClient() {
-        client = null; //reset client to make sure it starts as null
+        _client = null;
         pack();
         setResizable(false);
         setLocationRelativeTo(null);
         setVisible(true);
-        return client;
+        return _client;
     }
 }

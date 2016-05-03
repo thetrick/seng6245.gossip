@@ -8,65 +8,57 @@ import javax.swing.event.*;
 import client.QuorumClient;
 
 /**
- * Class representing the history of a user's chat. Contains a list with all chatrooms
- * the user has joined. Joining another chatroom after opening the history tab causes
- * the history tab to update with that new chatroom included. 
  * 
- * Selecting a chatroom on the list causes the text pane to display the history
- * of that chatroom up until the user closed the chatroom. If the user is still in the
- * chatroom, the history will also update itself to remain consistent with the open 
- * chatroom. Rejoining the chatroom will once again start updating the history with
- * messages. Creating a new chatroom with the exact same name as an old, closed 
- * chatroom counts as rejoining that conversation, and history continues as appropriate.
- *
+ * @author thetrick
+ * History contains past chats completed by the user. Provides Gui
+ * representation of all Quorums the user has joined.  When selecting
+ * a Quorum, the history is updated. As long as the user is connected
+ * to a Quorum, the history is updated to log all activity.  Any time
+ * a user reconnects to chatroom, the history should be maintained.
  */
 public class History extends JPanel{
 	private static final long serialVersionUID = 1L;
-	private final JLabel history;
-    private final JTextPane convoHistory;
-    private final JList pastChats;
+	private final JLabel _historyJLabel;
+    private final JTextPane _historyJTextPane;
+    private final JList _historyJList;
     
     /**
-     * Constructor for the History Tab.
-     * @param connectedRoomsHistory A hashmap of chatroom names to the matching QuorumClient.
-     * Should contain all chatrooms connected to ever during this user session.
+     * Constructor
+     * @param history - represents the history of any conversations matching the QuorumClient.
      */
-    public History(DefaultListModel pastChatModel) {
+    public History(DefaultListModel history) {
         Font TitleFont = new Font("SANS_SERIF", Font.BOLD, 18);
-        history = new JLabel("History");
-        history.setFont(TitleFont);
-        convoHistory = new JTextPane();
-        pastChats = new JList(pastChatModel);
+        _historyJLabel = new JLabel("History");
+        _historyJLabel.setFont(TitleFont);
+        _historyJTextPane = new JTextPane();
+        _historyJList = new JList(history);
         setName("History");
         
         
-        convoHistory.setEditable(false);
-        JScrollPane convoScroll = new JScrollPane (convoHistory);
+        _historyJTextPane.setEditable(false);
+        JScrollPane convoScroll = new JScrollPane (_historyJTextPane);
         convoScroll.setPreferredSize(new Dimension(700, 550));
-        JScrollPane chatScroll = new JScrollPane (pastChats);
+        JScrollPane chatScroll = new JScrollPane (_historyJList);
         chatScroll.setPreferredSize(new Dimension(250, 550));
-        pastChats.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        _historyJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
-        pastChats.addListSelectionListener(new ListSelectionListener() {
+        _historyJList.addListSelectionListener(new ListSelectionListener() {
             public void valueChanged(ListSelectionEvent e) {
-                if (!e.getValueIsAdjusting() && pastChats.getSelectedValue() != null) {
-                    QuorumClient chatroom = (QuorumClient) pastChats.getSelectedValue();
-                    convoHistory.setStyledDocument(chatroom.getDoc());
+                if (!e.getValueIsAdjusting() && _historyJList.getSelectedValue() != null) {
+                    QuorumClient chatroom = (QuorumClient) _historyJList.getSelectedValue();
+                    _historyJTextPane.setStyledDocument(chatroom.getDefaultStyledDocument());
                 }
             }
         });
         
-        //defining the layout
         GroupLayout layout = new GroupLayout(this);
         this.setLayout(layout);
         
-        //setting some margins around our components
         layout.setAutoCreateGaps(true);
         layout.setAutoCreateContainerGaps(true);
         
-        //organizing components
         layout.setVerticalGroup(layout.createSequentialGroup()
-                .addComponent(history)
+                .addComponent(_historyJLabel)
                 .addGroup(layout.createParallelGroup()
                         .addComponent(convoScroll)
                         .addComponent(chatScroll)));
@@ -74,7 +66,7 @@ public class History extends JPanel{
         layout.setHorizontalGroup(layout.createParallelGroup()
                 .addGroup(layout.createSequentialGroup()
                         .addContainerGap(15, 22)
-                        .addComponent(history))
+                        .addComponent(_historyJLabel))
                 .addGroup(layout.createSequentialGroup()
                         .addComponent(convoScroll)
                         .addComponent(chatScroll)));

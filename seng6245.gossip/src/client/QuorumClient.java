@@ -7,31 +7,29 @@ import javax.swing.text.*;
 
 
 /**
- * This is a QuorumClient that manages a chat room from the
- * client side.  It has the chat room name, the Rumor history,
- * the displayed Rumor document, and the list of users, and 
- * the username of the user using the chatroom client.
- *
+ * @author thetrick
+ * Manages the Quorum from the client. Stores the following information:
+ * Name, History, Display Style Information and list of users
  */
 public class QuorumClient {
-    private final String chatRoomName;
-    private ArrayList<Rumor> RumorHistory;
-    private DefaultStyledDocument displayedRumors;
-    private DefaultListModel userModel;
-    private final String myUsername;
+    private final String _quorumId;
+    private ArrayList<Rumor> _rumorHistory;
+    private DefaultStyledDocument _defaultStyledDocument;
+    private DefaultListModel _users;
+    private final String _currentUserName;
     
     /**
      * Constructs a QuorumClient with the given chatroom name
      * and the username
-     * @param nameOfChatRoom
+     * @param quorumId
      * @param username
      */
-    public QuorumClient(String nameOfChatRoom, String username) {
-        chatRoomName = nameOfChatRoom;
-        RumorHistory = new ArrayList<Rumor>();
-        displayedRumors = new DefaultStyledDocument();
-        userModel = new DefaultListModel();
-        myUsername = username;
+    public QuorumClient(String quorumId, String username) {
+        this._quorumId = quorumId;
+        this._rumorHistory = new ArrayList<Rumor>();
+        this._defaultStyledDocument = new DefaultStyledDocument();
+        this._users = new DefaultListModel();
+        this._currentUserName = username;
     }
     
     /**
@@ -42,29 +40,26 @@ public class QuorumClient {
      * @throws BadLocationException
      */
     public synchronized void addRumor(Rumor Rumor) throws BadLocationException {
-        RumorHistory.add(Rumor);
+    	this._rumorHistory.add(Rumor);
         SimpleAttributeSet userStyle = new SimpleAttributeSet();
         StyleConstants.setBold(userStyle, true);
-        if (Rumor.getUserName().equals(myUsername)) {
+        if (Rumor.getUserName().equals(_currentUserName)) {
             StyleConstants.setForeground(userStyle, Color.blue);
         }
-        displayedRumors.insertString(displayedRumors.getLength(), Rumor.getUserName() + ": ", userStyle);
-        displayedRumors.insertString(displayedRumors.getLength(), Rumor.getRumor() + "\n", null);
-
+        this._defaultStyledDocument.insertString(_defaultStyledDocument.getLength(), Rumor.getUserName() + ": ", userStyle);
+        this._defaultStyledDocument.insertString(_defaultStyledDocument.getLength(), Rumor.getRumor() + "\n", null);
     }
     
     /**
-     * Updates the users in the user list model from an array list
-     * of a new set of users by clearing the array list and repopulating
-     * it with the new list.
+     * refreshes the users using a list passed in... clears the old list
+     * and adds the new users back in.
      * @param newUsers
      */
     public synchronized void updateUsers(ArrayList<String> newUsers) {
-        //connectedUsers = newUsers;
-        userModel.clear();
+        this._users.clear();
         for (int i = 0; i < newUsers.size(); i++) {
         	System.out.println("putting   " + newUsers.get(i));
-            userModel.addElement(newUsers.get(i));
+            this._users.addElement(newUsers.get(i));
         }
         
     }
@@ -72,28 +67,28 @@ public class QuorumClient {
     
     @Override
     public String toString() {
-        return chatRoomName;
+        return this._quorumId;
     }
 
     /**
-     * @return The DefaultStyledDocument of the chatroom Rumors
+     * @return The DefaultStyledDocument of the Quorum's Rumors
      */
-    public DefaultStyledDocument getDoc() {
-        return displayedRumors;
+    public DefaultStyledDocument getDefaultStyledDocument() {
+        return this._defaultStyledDocument;
     }
     
     /**
-     * @return The name of the chatroom
+     * @return The name of the Quorum
      */
-    public String getChatRoomName() {
-        return chatRoomName;
+    public String getQuorumId() {
+        return this._quorumId;
     }
 
     /**
      * @return The DefaultListModel containing the list of users
      */
-    public DefaultListModel getUserListModel() {
-        return userModel;
+    public DefaultListModel getUsers() {
+        return this._users;
     }
 
 }

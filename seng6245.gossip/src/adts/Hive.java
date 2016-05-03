@@ -9,8 +9,9 @@ import java.util.Map;
 import server.Channel;
 
 /**
- * This class implements a list that holds a number of chat _quorums this class
- * will define methods for adding and removing _quorums from the server
+ * The Hive is container class for the list of Quorums that may exist.
+ * As such, the class contains the means by which to orchestrate and administer
+ * the activities associated the Hive
  */
 public class Hive
 {
@@ -18,120 +19,106 @@ public class Hive
 	private final Map<String, Quorum> _quorums;
 
 	/*
-	 * constructor for this list just initializes the fields
+	 * constructor
 	 * 
-	 * @param ServerNodes - master list of all of the people on the server
-	 * (used to inform everyone on the server)
+	 * @param ServerNodes - details all the Nodes that exist on the server
 	 */
-	public Hive(ServerNodes _serverNodes)
+	public Hive(ServerNodes serverNodes)
 	{
-		this._serverNodes = _serverNodes;
+		this._serverNodes = serverNodes;
 		this._quorums = new HashMap<String, Quorum>();
 	}
 
 	/*
-	 * Constructor for testing enables pauses that will be used for concurrency
-	 * testing only
-	 * 
-	 * @param ServerNodes -master list of all the people on the server
-	 * boolean - enable pauses
-	 */
-	public Hive(ServerNodes _serverNodes, boolean testing)
-	{
-		this._serverNodes = _serverNodes;
-		this._quorums = new HashMap<String, Quorum>();
-	}
-
-	/*
-	 * method to add a Quorum to this list inform everyone of the change
+	 * Add Quorum to the Hive's master list and notify everyone of the change
 	 * 
 	 * @param Quorum - quorum to add
 	 * 
-	 * @throws IOException - if the quorum already exists in this list
+	 * @throws IOException - thrown if the Quorum already exists in the master list
 	 */
-	public synchronized void add(Quorum quorum) throws IOException
+	public synchronized void addQuorum(Quorum quorum) throws IOException
 	{
-		// throw an ioException if the quorum exisits
-		if (this.contains(quorum.name))
-			throw new IOException("quorum already exists");
-		// put the quorum in the list
-		_quorums.put(quorum.name, quorum);
-		// inform everyone of the new _quorums
-		_serverNodes.informAll(getQuorums());
+		if (this.contains(quorum.Id))
+			throw new IOException("The Quorum already exists in the Hive.");
+		
+		// store the Quorum
+		this._quorums.put(quorum.Id, quorum);
+		
+		// notify all the nodes
+		this._serverNodes.notifyChannels(getQuorums());
 		return;
 	}
 
 	/*
-	 * method to remove a Quorum from this list informs everyone of the change
+	 * Removes the Quorum from the Master Hive list
 	 * 
 	 * @param Quorum - quorum to remove
 	 */
-	public synchronized void remove(Quorum quorum)
+	public synchronized void removeQuorum(Quorum quorum)
 	{
-		_quorums.remove(quorum.name);
-		// inform everyone of change
-		_serverNodes.informAll(getQuorums());
+		this._quorums.remove(quorum.Id);
+		// notify all the nodes
+		this._serverNodes.notifyChannels(getQuorums());
 		return;
 	}
 
 	/*
-	 * returns if a quorum name is in the list
+	 * True if the Quorum exists in the Hive
 	 * 
 	 * @param String - name of quorum
 	 * 
-	 * @return boolean - if the quorum exists in this list
+	 * @return boolean - indicator if the quorum exists in the hive
 	 */
-	public synchronized boolean contains(String name)
+	public synchronized boolean contains(String id)
 	{
-		return _quorums.containsKey(name);
+		return this._quorums.containsKey(id);
 	}
 
 	/*
-	 * method for getting a Quorum object by name
+	 * returns the Quorum by id
 	 * 
-	 * @param String - name of quorum to get
+	 * @param String - id of Quorum
 	 * 
-	 * @return Quorum - quorum that matches this name (null if no quorum)
+	 * @return Quorum - quorum that matches the id, return null if quorum does not exist
 	 */
-	public Quorum getQuorumByName(String quorumName)
+	public Quorum getQuorumById(String id)
 	{
-		return _quorums.get(quorumName);
+		return _quorums.get(id);
 	}
 
 	/*
-	 * returns a string representation of all the _quorums in this list
+	 * Returns all quorum names
 	 * 
-	 * @return String - string list of all the names of the _quorums in this list
+	 * @return String - The names of the Quorums in the Hive
 	 */
 	private String getQuorums()
 	{
-		StringBuilder Hive = new StringBuilder("serverHive ");
-		ArrayList<String> copy = new ArrayList<String>();
-		for (String _quorumsString : _quorums.keySet())
-			copy.add(new String(_quorumsString));
-		Collections.sort(copy);
-		for (String s : copy)
-			Hive.append(s + ' ');
-		Hive.deleteCharAt(Hive.length() - 1);
-		return Hive.toString();
+		StringBuilder stringBuilder = new StringBuilder("Hive ");
+		ArrayList<String> quorums = new ArrayList<String>();
+		for (String quorum : _quorums.keySet())
+			quorums.add(quorum);
+		Collections.sort(quorums);
+		for (String quorum : quorums)
+			stringBuilder.append(quorum + " ");
+		stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+		return stringBuilder.toString();
 	}
 
 	/*
-	 * method to update a specific user of all the _quorums in this list
+	 * Update a specific channel of all the Quorums in the Hive
 	 * 
 	 * @param Channel - user to be updated
 	 */
-	public synchronized void updateUser(Channel user)
+	public synchronized void updateChannel(Channel channel)
 	{
-		user.updateBuffer(getQuorums());
+		channel.updateBuffer(getQuorums());
 	}
 
 	/*
-	 * method to return the map of all the _quorums only used for testing
-	 * 
-	 * @return Map<String, Quorum> - map that holds all of the _quorums
+	 * Return the underlying Map containing Quorums in the Hive
+	 * @return the Map between Quorum Id and Quorum
 	 */
-	public Map<String, Quorum> getMap()
+	public Map<String, Quorum> getQuorumsMap()
 	{
 		return this._quorums;
 	}

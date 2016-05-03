@@ -10,18 +10,20 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * @author thetrick
+ * Orchestrates the activities necessary between the server and the user to obtain a connection
+ */
 public class Client {
     private final String username;
     private final Socket socket;
-    private final PrintWriter out;
-    private final BufferedReader in;    
+    private final PrintWriter _print;
+    private final BufferedReader _buffer;    
 
     /**
-     * Constructor for a client.  Performs the handshake between
-     * the server and the user to achieve a valid connection and
-     * a valid client.
-     * @param username
-     * @param IPAddress
+     * Constructor.  
+     * @param username - Identifies the user making the connection
+     * @param IPAddress 
      * @param port
      * @throws IOException If the username is invalid or if logging
      *      in was unsuccessful
@@ -34,32 +36,33 @@ public class Client {
 		}
 		catch (Exception e)
 		{
-			throw new IOException("Could not resolve host");
+			throw new IOException("No host...");
 		}
-        System.err.println("Connected to server");
+        
+        System.out.println("Server has been found...");
 
-        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        this.out = new PrintWriter(socket.getOutputStream());
-        System.err.println("IO Streams enabled");
+        this._buffer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        this._print = new PrintWriter(socket.getOutputStream());
+        System.out.println("Stream processing has been enabled...");
 
-        System.err.println("Waiting for Handshake");
-        String prompt = in.readLine();
+        System.out.println("Starting the handshake...");
+        String prompt = _buffer.readLine();
 
-        System.err.println("Verifying Handshake");
+        System.out.println("Verification has started");
         if (!prompt.equals("To connect type: \"connect [username]\""))
-            throw new IOException("Server returned invalid handshake");
-        System.err.println("Handshake Passed");
+            throw new IOException("Bad Handshake");
+        System.out.println("Handshake Passed...");
 
-        System.err.println("Sending Username");
-        out.println("connect " + this.username);
-        out.flush();
+        System.out.println("Sending Username");
+        _print.println("connect " + this.username);
+        _print.flush();
 
-        System.err.println("Verifying Username");
-        prompt = in.readLine();
-        if (!prompt.matches("Connected"))
-            throw new IOException(prompt);
+        System.out.println("Verifying Username...");
+        //prompt = _buffer.readLine();
+        //if (!prompt.matches("Connected"))
+        //    throw new IOException(prompt);
 
-        System.err.println("Client connected");
+        //System.err.println("Client connected");
     }
 
     /**
@@ -69,7 +72,7 @@ public class Client {
      */
     public String readBuffer() throws IOException {
         try {
-            return in.readLine();
+            return _buffer.readLine();
         } catch (IOException e) {
             throw new IOException("Disconnected from Server");
         }
@@ -80,9 +83,9 @@ public class Client {
      * @param output String to be sent to the server
      */
     public void send(String output) {
-        out.println(output);
-        out.flush();
-        System.err.println(output);
+        _print.println(output);
+        _print.flush();
+        System.out.println(output);
         return;
     }
     
@@ -101,7 +104,7 @@ public class Client {
     public void start(Main main) {
         try {
             System.out.println("About to start loop");
-            for(String input = in.readLine(); input!=null; input = in.readLine()) {
+            for(String input = _buffer.readLine(); input!=null; input = _buffer.readLine()) {
                 System.out.println("Looping");
                 if(input.equals("disconnectedServerSent"))
                 	break;
@@ -112,8 +115,8 @@ public class Client {
         } finally {
         	try
 			{
-            	in.close();
-            	out.close();
+            	_buffer.close();
+            	_print.close();
 				socket.close();
 			}
 			catch (IOException ignore)
@@ -156,7 +159,7 @@ public class Client {
         } else {
             String[] info = input.substring(firstSpaceIndex+1).split(" ");
             if(command.equals("serverUserList")) {
-                main.updateMainUserList(info);
+                main.updateUsers(info);
                 
             } else if(command.equals("serverRoomList")) {
                 main.updateMainChatList(info);
@@ -177,11 +180,11 @@ public class Client {
                 
             } else if(command.equals("connectedRoom")) {
                 String chatname = info[0];
-                main.joinChat(chatname);
+                main.joinQuorum(chatname);
 
             } else if(command.equals("disconnectedRoom")) {
                 String chatname = info[0];
-                main.leaveChat(chatname);
+                main.leaveQuorum(chatname);
 
             }  else {
                 System.err.println("Derp we seem to have ended up in dead code");
@@ -192,10 +195,10 @@ public class Client {
     // just a method to test this rig out; isn't used in the gui
     public static void main(String[] args) {
         try {
-            Client c = new Client("user2", "127.0.0.1", 10000);
-
-            while (true)
-                System.out.println(c.readBuffer());
+            Client client = new Client("user2", "127.0.0.1", 25252);
+            while (true) {
+                System.out.println(client.readBuffer());
+            }
         } catch (IOException e) {
             System.err.println(e.getMessage() + "\n");
             e.printStackTrace();
