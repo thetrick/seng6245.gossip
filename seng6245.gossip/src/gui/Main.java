@@ -172,13 +172,13 @@ public class Main extends JFrame {
     /**
      * Returns the particular tab given the string for the
      * chat name
-     * @param chatName
-     * @return The JPanel Tab with the given chatroom name
+     * @param quorumId
+     * @return The JPanel Tab with the given quorum name
      */
-    private JPanel findTab(String chatName) {
+    private JPanel findTab(String quorumId) {
         for (int i = 0; i<_tabs.getTabCount(); i++) {
             String tabName = _tabs.getComponentAt(i).getName();
-            if (tabName == chatName) {
+            if (tabName == quorumId) {
                 return (JPanel) _tabs.getComponentAt(i);
             }
         }
@@ -188,21 +188,21 @@ public class Main extends JFrame {
 
     /**
      * Adds a Message object to the appropriate QuorumClient, which will result in that
-     * chatroom object's conversation being updated appropriately.
-     * @param chatRoomName name of the chatroom the message is to be sent to
-     * @param userName the user sending the message
+     * quorum object's conversation being updated appropriately.
+     * @param quorumId name of the quorum the message is to be sent to
+     * @param user the user sending the message
      * @param message the actual message itself
      */
-    public void updateConversation(String chatRoomName, String userName, String message) {
-        final String c = chatRoomName;
-        final String u = userName;
-        final String m = message;
+    public void updateConversation(String quorumId, String user, String message) {
+        final String qid = quorumId;
+        final String un = user;
+        final String msg = message;
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                if(_quorumClients.containsKey(c)){
-                    QuorumClient roomCurrent = _quorumClients.get(c);
+                if(_quorumClients.containsKey(qid)){
+                    QuorumClient currentQuorum = _quorumClients.get(qid);
                     try {
-                        roomCurrent.addRumor(new Rumor(u, m));
+                        currentQuorum.addRumor(new Rumor(un, msg));
                     } catch (BadLocationException e1) {
                         e1.printStackTrace();
                     }
@@ -227,6 +227,7 @@ public class Main extends JFrame {
         final String[] list = users;
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
+            	System.out.println("Updating serverUsers");
                 _users.clear();
                 for(int i = 0; i < list.length; i++) {
                     _users.addElement(list[i]);
@@ -236,14 +237,14 @@ public class Main extends JFrame {
     }
     
     /**
-     * Updates the DefaultListModel for the list of all chatrooms on the server
-     * @param chats Array of chats to update the model wiht
+     * Updates the DefaultListModel for the list of all quorums on the server
+     * @param quorums Array of quorums to update the model
      */
-    public void updateMainChatList(String[] chats) {
-        final String[] list = chats;
+    public void updateQuorums(String[] quorums) {
+        final String[] list = quorums;
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                System.out.println("Updating serverRoomList");
+                System.out.println("Updating quorums");
                 _quorums.clear();
                 for(int i = 0; i < list.length; i++) {
                     System.out.println("Adding room: " + list[i]);
@@ -254,46 +255,46 @@ public class Main extends JFrame {
     }
     
     /**
-     * Updates the list of users inside of a chatroom
-     * @param chatname Name of the chatroom to update
-     * @param users ArrayList of users to update the chatroom with
+     * Updates the list of users inside of a quorum
+     * @param quorumId Name of the quorum to update
+     * @param users ArrayList of users to update the quorum with
      */
-    public void updateChatUserList(String chatname, ArrayList<String> users) {
-        final String c = chatname;
+    public void updateQuorumUsers(String quorumId, ArrayList<String> users) {
+        final String qid = quorumId;
         final ArrayList<String> list = users;
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                if (_quorumClients.containsKey(c)) {
-                    QuorumClient roomCurrent = _quorumClients.get(c);
-                    roomCurrent.updateUsers(list);
+                if (_quorumClients.containsKey(qid)) {
+                    QuorumClient currentQuorum = _quorumClients.get(qid);
+                    currentQuorum.updateUsers(list);
                 }
             }
         });
     }
     /**
      * Makes sure that the local list of chats the user is a part of is the same as
-     * the list of chats on the server. If the server returns a chatroom that the user
+     * the list of chats on the server. If the server returns a quorum that the user
      * is not a part of, the client will send a message telling the server to disconnect
-     * the user from that chatroom. If the server does not return a chatroom that the user
+     * the user from that quorum. If the server does not return a quorum that the user
      * says they are connected to, a message will be sent to the server telling them to 
      * connect the user.
      * 
      * TODO: compare both ways, not just check if a room is in c
      * @param username The user who this list of chats corresponds to
-     * @param chats The list of all chats the server thinks the user is connected to
+     * @param quorums The list of all quorums the server thinks the user is connected to
      */
-    public void updateUserChatList(String username, String[] chats) {
-        final String u = username;
-        final String[] list = chats;
+    public void updateUserQuorums(String username, String[] quorums) {
+        final String un = username;
+        final String[] list = quorums;
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                if (u.equals(client.getUsername())) {
-                    System.out.println("Checking that chatlist is up to date");
+                if (un.equals(client.getUsername())) {
+                    System.out.println("Verify that the list of chats is up to date.");
                     for(int i = 0; i < list.length; i++) {
-                        Set<String> localRooms= _quorumClients.keySet();
-                        localRooms.toArray(new String[0]);
+                        Set<String> localQuorums = _quorumClients.keySet();
+                        localQuorums.toArray(new String[0]);
                         if(!_quorumClients.containsKey(list[i])) {
-                            client.send("disconnect " + u);
+                            client.send("disconnect " + un);
                         }
                     }
                 }
@@ -305,10 +306,10 @@ public class Main extends JFrame {
      * Joins the appropriate chat by opening up a tab for it and adding a QuorumClient
      * object to _quorumClients. If the room has been joined before, that previous
      * QuorumClient object is added. Otherwise, a new QuorumClient is created.
-     * @param chatname The name of the chatroom to be joined
+     * @param quorumId The name of the quorum to be joined
      */
-    public void joinQuorum(String chatname) {
-        final String c = chatname;
+    public void joinQuorum(String quorumId) {
+        final String c = quorumId;
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 if(_quorumClientHistory.containsKey(c)) {
@@ -330,9 +331,9 @@ public class Main extends JFrame {
     }
     
     /**
-     * Removes the Kicks the user out of a chatroom. If the user isn't in the room, nothing
+     * Removes the Kicks the user out of a quorum. If the user isn't in the room, nothing
      * happens.
-     * @param quorumId The name of the chatroom
+     * @param quorumId The name of the quorum
      */
     public void leaveQuorum(String quorumId) {
         final String id = quorumId;

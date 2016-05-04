@@ -161,17 +161,16 @@ public class Channel implements Runnable
 	{
 		// sets up regex
 		String regex = "(((disconnect)|(make)|(join)|(exit)) " + "\\p{Graph}+)|" + "(message \\p{Graph}+ \\p{Print}+)";
-		Pattern p = Pattern.compile(regex);
-		Matcher m = p.matcher(input);
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(input);
 
 		// if there is no match for the input string
-		if (!m.matches())
-			return "Unrecognized Command " + input; // Should not occur assuming
-													// client input is correct
+		if (!matcher.matches())
+			return "Unrecognized Command: " + input; 
 
 		// find the first space in the string
-		int spaceIndex = input.indexOf(' ');
-		String command = input.substring(0, spaceIndex);
+		int idx = input.indexOf(' ');
+		String command = input.substring(0, idx);
 
 		// if the string contains "disconnect", set _isAlive to false and kill
 		// connection
@@ -179,14 +178,14 @@ public class Channel implements Runnable
 		{
 			// removeAllConnections();
 			this._isAlive = false;
-			return "disconnectedServerSent";
+			return "disconnectedFromServer";
 		}
 		// if the command is to make, join or exit (it is a room command)
 		else if (command.equals("make") || command.equals("join") || command.equals("exit"))
 		{
 
 			// find the next word in string and parse it as the room name
-			String quorumName = input.substring(spaceIndex + 1);
+			String quorumName = input.substring(idx + 1);
 
 			// if making a new room
 			if (command.equals("make"))
@@ -197,13 +196,12 @@ public class Channel implements Runnable
 					// Constructor above automatically adds the Quorum to the
 					// list of chat _hive of the server
 					_quorums.put(newQuorum.Id, newQuorum);
-					notifyQuorums();
-					return "";
+					String note = notifyQuorums();
+					return note;
 				}
 				catch (IOException e)
 				{
-					// if we cant make a room there will be an error message
-					return "invalidRoom " + quorumName + " " + e.getMessage();
+					return "badQuorum " + quorumName + " " + e.getMessage();
 				}
 
 			// if joining a new room
@@ -214,33 +212,32 @@ public class Channel implements Runnable
 					try
 					{
 						// try to join the room - what could happen is the room
-						// could dissapear at this stage, expect an IOException
-						Quorum roomToJoin = _hive.getQuorumById(quorumName);
-						roomToJoin.addChannel(this);
-						this._quorums.put(roomToJoin.Id, roomToJoin);
+						// could disappear at this stage, expect an IOException
+						Quorum quorumToJoin = _hive.getQuorumById(quorumName);
+						quorumToJoin.addChannel(this);
+						this._quorums.put(quorumToJoin.Id, quorumToJoin);
 						return "";
-						// if something bad happened when joining a room
 					}
 					catch (IOException e)
 					{
-						return "invalidRoom " + quorumName + " " + e.getMessage();
+						return "badQuorum " + quorumName + " " + e.getMessage();
 					}
 				else
-					return "invalidRoom " + quorumName + " Room name does not exist";
-
-				// stuff for exiting a room
+				{
+					return "badQuorum " + quorumName + " Room name does not exist";
+				}
 			}
 			else if (command.equals("exit"))
 			{
 				// remove the room from personal listings
-				Quorum roomToExit = _quorums.remove(quorumName);
-				if (roomToExit != null)
+				Quorum quorumToExit = _quorums.remove(quorumName);
+				if (quorumToExit != null)
 				{
 					// remove the user from the room
-					roomToExit.removeChannel(this);
+					quorumToExit.removeChannel(this);
 					return "disconnectedRoom " + quorumName;
 				}
-				return "invalidRoom " + quorumName + " user not connected to room";
+				return "badQuorum " + quorumName + " user not connected to room";
 			}
 
 			// stuff for messaging a specific room
@@ -248,21 +245,21 @@ public class Channel implements Runnable
 		else if (command.equals("message"))
 		{
 			// splice out the target Quorum and message
-			int secondSpaceIndex = input.indexOf(' ', spaceIndex + 1);
-			String Quorum = input.substring(spaceIndex + 1, secondSpaceIndex);
-			String message = input.substring(secondSpaceIndex + 1);
+			int idx2 = input.indexOf(' ', idx + 1);
+			String Quorum = input.substring(idx + 1, idx2);
+			String message = input.substring(idx2 + 1);
 
 			// update the queue of the Quorum
-			Quorum roomToMessage = _quorums.get(Quorum);
-			if (roomToMessage != null)
+			Quorum quorumToMessage = _quorums.get(Quorum);
+			if (quorumToMessage != null)
 			{
-				roomToMessage.updateBuffer(_userName + " " + message);
+				quorumToMessage.updateBuffer(_userName + " " + message);
 				return "";
 			}
 			return "";
 		}
 
-		return "Unrecongnized Command " + input;
+		return "Unrecongnized Command: " + input;
 	}
 
 	/**
@@ -273,8 +270,8 @@ public class Channel implements Runnable
 	{
 		StringBuilder stringBuilder = new StringBuilder("List of connected Quorums: ");
 		for (String quorum : _quorums.keySet())
-			stringBuilder.append(quorum + ", ");
-		return (stringBuilder.substring(0, stringBuilder.length() - 2));
+			stringBuilder.append(quorum + " ");
+		return (stringBuilder.substring(0, stringBuilder.length() - 1));
 	}
 
 	/*

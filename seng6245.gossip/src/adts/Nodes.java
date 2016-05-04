@@ -6,7 +6,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import server.Channel;;
+import server.Channel;
+import tests.Utility;;
 
 /**
  * base class used to construct a list of channels
@@ -17,16 +18,23 @@ public abstract class Nodes
 {
 	// Maps the users to channels
 	private Map<String, Channel> Nodes;
-
+	private boolean isTest = false;
+	
 	/*
 	 * Constructor
 	 */
 	public Nodes()
 	{
-		// Initializes the mapping of Nodes
-		Nodes = new HashMap<String, Channel>();
+		this(false);
 	}
 
+	public Nodes(boolean isTest)
+	{
+		// Initializes the mapping of Nodes
+		this.Nodes = new HashMap<String, Channel>();
+		this.isTest = isTest;
+	}
+	
 	/*
 	 * adds a channel to the list of nodes
 	 * throw an exception if the channel's user already exists within another channel
@@ -40,6 +48,8 @@ public abstract class Nodes
 	{
 		synchronized (Nodes)
 		{
+			if(this.isTest)
+				Utility.pause(1000);
 			if (this.contains(channel.getUserName()))
 				throw new IOException("The user associated with this channel already exists.");
 			Nodes.put(channel.getUserName(), channel);
@@ -59,6 +69,8 @@ public abstract class Nodes
 		{
 			Nodes.remove(channel.getUserName());
 			notifyChannels(getList());
+			if(this.isTest)
+				Utility.pause(1000);
 			return;
 		}
 	}
@@ -80,7 +92,7 @@ public abstract class Nodes
 	 * 
 	 * @return String - list of all Nodes in list
 	 */
-	protected String getList()
+	public String getList()
 	{
 		if (this.size() <= 0)
 			return "";

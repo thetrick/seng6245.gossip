@@ -20,7 +20,6 @@ public class Server
 	/*
 	 * Constructor
 	 * Binds a server to a port on the local address
-	 * 
 	 * @param int - port 0 <= int <= 65535
 	 * @throws IOException - if socket cannot be bound to port
 	 */
@@ -91,9 +90,8 @@ public class Server
 	}
 
 	/*
-	 * returns the serverSocket instance - for teting only
-	 * 
-	 * @return SeverSocket - the socket that everytihng is connected to
+	 * returns the serverSocket instance
+	 * @return SeverSocket - the socket that connected to all channels
 	 */
 	public ServerSocket getServerSocket()
 	{
@@ -101,9 +99,8 @@ public class Server
 	}
 	
 	/*
-	 * returns the list of all _serverNodes - for testing only
-	 * 
-	 * @return ServerNodes - list of all the _serverNodes
+	 * returns the list of all Server Nodes
+	 * @return ServerNodes - list of all Server Nodes
 	 */
 	public ServerNodes getServerNodes()
 	{
@@ -111,10 +108,8 @@ public class Server
 	}
 	
 	/*
-	 * returns the ist o fall the _hive - for testing only
-	 * 
-	 * @return
-	 * _hive - list of all the _hive
+	 * returns the hive which contains a list of quorums
+	 * @return Hive - The Hive of Quorum associated with the Server
 	 */
 	public Hive getHive()
 	{
@@ -137,7 +132,7 @@ public class Server
 	}
 
 	/**
-	 * Start a chat server.
+	 * Start a gossip server.
 	 */
 	public static void main(String[] args) throws IOException
 	{

@@ -28,7 +28,7 @@ public class ClientNodes extends Nodes
 	 * appends "ClientNodes (" + this.name + "): "  to the underlying list of nodes
 	 */
 	@Override
-	protected String getList()
+	public String getList()
 	{
 		String list = super.getList();
 		return "ClientNodes (" + this.name + "): " + list;

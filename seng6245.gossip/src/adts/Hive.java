@@ -17,23 +17,26 @@ public class Hive
 {
 	private ServerNodes _serverNodes;
 	private final Map<String, Quorum> _quorums;
+	private boolean isTest = false;
 
 	/*
 	 * constructor
-	 * 
 	 * @param ServerNodes - details all the Nodes that exist on the server
 	 */
 	public Hive(ServerNodes serverNodes)
 	{
-		this._serverNodes = serverNodes;
-		this._quorums = new HashMap<String, Quorum>();
+		this(serverNodes, false);
 	}
 
+	public Hive(ServerNodes serverNodes, boolean isTest)
+	{
+		this._serverNodes = serverNodes;
+		this._quorums = new HashMap<String, Quorum>();		
+	}
+	
 	/*
 	 * Add Quorum to the Hive's master list and notify everyone of the change
-	 * 
 	 * @param Quorum - quorum to add
-	 * 
 	 * @throws IOException - thrown if the Quorum already exists in the master list
 	 */
 	public synchronized void addQuorum(Quorum quorum) throws IOException
@@ -51,7 +54,6 @@ public class Hive
 
 	/*
 	 * Removes the Quorum from the Master Hive list
-	 * 
 	 * @param Quorum - quorum to remove
 	 */
 	public synchronized void removeQuorum(Quorum quorum)
@@ -64,9 +66,7 @@ public class Hive
 
 	/*
 	 * True if the Quorum exists in the Hive
-	 * 
 	 * @param String - name of quorum
-	 * 
 	 * @return boolean - indicator if the quorum exists in the hive
 	 */
 	public synchronized boolean contains(String id)
@@ -76,9 +76,7 @@ public class Hive
 
 	/*
 	 * returns the Quorum by id
-	 * 
 	 * @param String - id of Quorum
-	 * 
 	 * @return Quorum - quorum that matches the id, return null if quorum does not exist
 	 */
 	public Quorum getQuorumById(String id)
@@ -88,7 +86,6 @@ public class Hive
 
 	/*
 	 * Returns all quorum names
-	 * 
 	 * @return String - The names of the Quorums in the Hive
 	 */
 	private String getQuorums()
@@ -106,7 +103,6 @@ public class Hive
 
 	/*
 	 * Update a specific channel of all the Quorums in the Hive
-	 * 
 	 * @param Channel - user to be updated
 	 */
 	public synchronized void updateChannel(Channel channel)

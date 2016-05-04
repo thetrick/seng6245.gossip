@@ -71,9 +71,12 @@ public class Client {
      * @throws IOException Disconnected from server
      */
     public String readBuffer() throws IOException {
-        try {
+        try 
+        {
             return _buffer.readLine();
-        } catch (IOException e) {
+        } 
+        catch (IOException e) 
+        {
             throw new IOException("Disconnected from Server");
         }
     }
@@ -102,28 +105,32 @@ public class Client {
      * @param main
      */
     public void start(Main main) {
-        try {
-            System.out.println("About to start loop");
-            for(String input = _buffer.readLine(); input!=null; input = _buffer.readLine()) {
-                System.out.println("Looping");
-                if(input.equals("disconnectedServerSent"))
+        try 
+        {
+            System.out.println("Start the main client loop");
+            for(String input = _buffer.readLine(); input!=null; input = _buffer.readLine()) 
+            {
+                System.out.println("I am getting dizzy...");
+                if(input.equals("disconnectedFromServer"))
                 	break;
                 parseInput(input, main);
             }
-        } catch(IOException e) {
+        } 
+        catch(IOException e) 
+        {
             main.quit();
-        } finally {
+        } 
+        finally 
+        {
         	try
 			{
             	_buffer.close();
             	_print.close();
 				socket.close();
 			}
-			catch (IOException ignore)
-			{
-			}
+			catch (IOException ignore){}
         }
-        System.err.println("client consumer terminated....");
+        System.err.println("client terminated....");
     }
     
     /**
@@ -135,71 +142,87 @@ public class Client {
     private void parseInput(String input, Main main) {
         System.out.println(input);
         
-        int firstSpaceIndex = input.indexOf(' ');
+        int idx1 = input.indexOf(' ');
         String command;
-        if (firstSpaceIndex ==  -1) {
+        if (idx1 ==  -1) 
+        {
             command = input;
-            firstSpaceIndex = input.length()-1;
+            idx1 = input.length()-1;
         }
         else
-            command = input.substring(0, firstSpaceIndex);
+            command = input.substring(0, idx1);
         
-        if(command.equals("message")) {
-            int secondSpaceIndex = input.indexOf(' ', firstSpaceIndex+1);
-            int thirdSpaceIndex = input.indexOf(' ', secondSpaceIndex+1);
-            String chatRoomName = input.substring(firstSpaceIndex + 1, secondSpaceIndex);
-            String userName = input.substring(secondSpaceIndex + 1, thirdSpaceIndex);
-            String message = input.substring(thirdSpaceIndex + 1);
-            main.updateConversation(chatRoomName, userName, message);
-        } else if (command.equals("invalidRoom")) {
-            int secondSpaceIndex = input.indexOf(' ', firstSpaceIndex+1);
-            String errorMessage = input.substring(secondSpaceIndex + 1);
-            main.displayErrorMessage(errorMessage);
-            
-        } else {
-            String[] info = input.substring(firstSpaceIndex+1).split(" ");
-            if(command.equals("serverUserList")) {
-                main.updateUsers(info);
-                
-            } else if(command.equals("serverRoomList")) {
-                main.updateMainChatList(info);
-
-            } else if(command.equals("chatUserList")) {
-                String chatname = info[0];
-                ArrayList<String> newChatList = new ArrayList<String>();
-                for (int i = 1; i < info.length; i++) {
-                    System.err.println("adding: " + info[i]);
-                    newChatList.add(info[i]);
+        if(command.equals("message")) 
+        {
+            int idx2 = input.indexOf(' ', idx1 + 1);
+            int idx3 = input.indexOf(' ', idx2 + 1);
+            String quorumId = input.substring(idx1 + 1, idx2);
+            String user = input.substring(idx2 + 1, idx3);
+            String message = input.substring(idx3 + 1);
+            main.updateConversation(quorumId, user, message);
+        } 
+        else if (command.equals("badQuorum"))
+        {
+            int idx2 = input.indexOf(' ', idx1 + 1);
+            String errorMessage = input.substring(idx2 + 1);
+            main.displayErrorMessage(errorMessage);   
+        } 
+        else 
+        {
+            String[] details = input.substring(idx1 + 1).split(" ");
+            if(command.equals("serverUsers")) 
+            {
+                main.updateUsers(details);    
+            } 
+            else if(command.equals("serverQuorums")) 
+            {
+                main.updateQuorums(details);
+            } 
+            else if(command.equals("quorumUsers")) 
+            {
+                String quorumId = details[0];
+                ArrayList<String> users = new ArrayList<String>();
+                for (int i = 1; i < details.length; i++) {
+                    System.err.println("Adding User: " + details[i]);
+                    users.add(details[i]);
                 }
-                main.updateChatUserList(chatname, newChatList);
-
-            } else if(command.equals("clientRoomList")) {
-                String username = info[0];
-                String[] chats = Arrays.copyOfRange(info, 1, info.length);
-                main.updateUserChatList(username, chats);
-                
-            } else if(command.equals("connectedRoom")) {
-                String chatname = info[0];
-                main.joinQuorum(chatname);
-
-            } else if(command.equals("disconnectedRoom")) {
-                String chatname = info[0];
-                main.leaveQuorum(chatname);
-
-            }  else {
-                System.err.println("Derp we seem to have ended up in dead code");
+                main.updateQuorumUsers(quorumId, users);
+            } 
+            else if(command.equals("userQuorums")) 
+            {
+                String user = details[0];
+                String[] quorums = Arrays.copyOfRange(details, 1, details.length);
+                main.updateUserQuorums(user, quorums);
+            } 
+            else if(command.equals("connectToQuorum")) 
+            {
+                String quorumId = details[0];
+                main.joinQuorum(quorumId);
+            } 
+            else if(command.equals("disconnectedRoom")) 
+            {
+                String quorumId = details[0];
+                main.leaveQuorum(quorumId);
+            }  
+            else 
+            {
+                System.err.println("We are truly lost...bad Command: " + command);
             }
         }
     }
 
     // just a method to test this rig out; isn't used in the gui
     public static void main(String[] args) {
-        try {
+        try 
+        {
             Client client = new Client("user2", "127.0.0.1", 25252);
-            while (true) {
+            while (true) 
+            {
                 System.out.println(client.readBuffer());
             }
-        } catch (IOException e) {
+        } 
+        catch (IOException e) 
+        {
             System.err.println(e.getMessage() + "\n");
             e.printStackTrace();
         }
