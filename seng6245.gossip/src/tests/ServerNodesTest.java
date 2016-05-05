@@ -36,7 +36,7 @@ public class ServerNodesTest
 		serverNodes.add(channel3);
 
 		String output = serverNodes.getList();
-		assertEquals(output, "ServerNodes: 1 3 2");
+		assertEquals(output, "ServerNodes: 1 2 3");
 	}
 
 	// tests the getList method on an empty list

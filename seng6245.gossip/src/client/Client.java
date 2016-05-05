@@ -59,7 +59,7 @@ public class Client {
 
         System.out.println("Verifying Username...");
         //prompt = _buffer.readLine();
-        //if (!prompt.matches("Connected"))
+        //if (!prompt.matches("Connected!"))
         //    throw new IOException(prompt);
 
         //System.err.println("Client connected");

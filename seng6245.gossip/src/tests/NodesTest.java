@@ -68,7 +68,7 @@ public class NodesTest
 		assertEquals(map.size(), 3);
 		assertEquals(map.get("1"), channel1);
 		assertEquals(map.get("2"), channel2);
-		assertEquals(map.get("th3ree"), channel3);
+		assertEquals(map.get("3"), channel3);
 
 		buffer = channel1.getBuffer();
 		output = buffer.poll();
@@ -84,13 +84,13 @@ public class NodesTest
 		output = buffer.poll();
 		assertEquals(output, "1 2");
 		output = buffer.poll();
-		assertEquals(output, "1 3 2");
+		assertEquals(output, "1 2 3");
 		output = buffer.poll();
 		assertEquals(output, null);
 
 		buffer = channel3.getBuffer();
 		output = buffer.poll();
-		assertEquals(output, "1 3 2");
+		assertEquals(output, "1 2 3");
 		output = buffer.poll();
 		assertEquals(output, null);
 	}
@@ -170,7 +170,7 @@ public class NodesTest
 		nodes.add(channel3);
 
 		String output = nodes.getList();
-		assertEquals(output, "1 3 2");
+		assertEquals(output, "1 2 3");
 	}
 
 	// check for empty node list

@@ -44,7 +44,7 @@ public class ClientNodesTest
 		clientNodes.add(channel3);
 
 		String output = clientNodes.getList();
-		assertEquals(output, "ClientNodes:: users 1 3 2");
+		assertEquals(output, "ClientNodes (users): 1 2 3");
 	}
 
 	// tests the getList method on an empty list
@@ -52,7 +52,7 @@ public class ClientNodesTest
 	public void testEmptyList() throws IOException
 	{
 		String output = clientNodes.getList();
-		assertEquals(output, "ClientNodes: users ");
+		assertEquals(output, "ClientNodes (users): ");
 	}
 
 	// tests the getList method on an empty list that was once filled
@@ -68,7 +68,7 @@ public class ClientNodesTest
 		clientNodes.remove(channel1);
 
 		String output = clientNodes.getList();
-		assertEquals(output, "ClientNodes: users ");
+		assertEquals(output, "ClientNodes (users): ");
 	}
 
 	// test to see if we can add a user properly
@@ -79,10 +79,10 @@ public class ClientNodesTest
 		clientNodes.add(channel1);
 		Map<String, Channel> map = clientNodes.getNodesMap();
 		assertEquals(map.size(), 1);
-		assertEquals(map.get("one"), channel1);
+		assertEquals(map.get("1"), channel1);
 		LinkedBlockingQueue<String> buffer = channel1.getBuffer();
 		String output = buffer.poll();
-		assertEquals(output, "ClientNodes: users 1");
+		assertEquals(output, "ClientNodes (users): 1");
 		output = buffer.poll();
 		assertEquals(output, null);
 	}
@@ -98,31 +98,31 @@ public class ClientNodesTest
 		clientNodes.add(channel3);
 		Map<String, Channel> map = clientNodes.getNodesMap();
 		assertEquals(map.size(), 3);
-		assertEquals(map.get("one"), channel1);
-		assertEquals(map.get("two"), channel2);
-		assertEquals(map.get("three"), channel3);
+		assertEquals(map.get("1"), channel1);
+		assertEquals(map.get("2"), channel2);
+		assertEquals(map.get("3"), channel3);
 
 		buffer = channel1.getBuffer();
 		output = buffer.poll();
-		assertEquals(output, "ClientNodes: users 1");
+		assertEquals(output, "ClientNodes (users): 1");
 		output = buffer.poll();
-		assertEquals(output, "ClientNodes: users 1 2");
+		assertEquals(output, "ClientNodes (users): 1 2");
 		output = buffer.poll();
-		assertEquals(output, "ClientNodes: users 1 3 2");
+		assertEquals(output, "ClientNodes (users): 1 2 3");
 		output = buffer.poll();
 		assertEquals(output, null);
 
 		buffer = channel2.getBuffer();
 		output = buffer.poll();
-		assertEquals(output, "ClientNodes: users 1 2");
+		assertEquals(output, "ClientNodes (users): 1 2");
 		output = buffer.poll();
-		assertEquals(output, "ClientNodes: users 1 3 2");
+		assertEquals(output, "ClientNodes (users): 1 2 3");
 		output = buffer.poll();
 		assertEquals(output, null);
 
 		buffer = channel3.getBuffer();
 		output = buffer.poll();
-		assertEquals(output, "ClientNodes: users 1 3 2");
+		assertEquals(output, "ClientNodes (users): 1 2 3");
 		output = buffer.poll();
 		assertEquals(output, null);
 	}

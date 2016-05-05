@@ -53,10 +53,10 @@ public class HiveTest
 		hive.addQuorum(quorum1);
 		Map<String, Quorum> map = hive.getQuorumsMap();
 		assertEquals(map.size(), 1);
-		assertEquals(map.get("one"), quorum1);
+		assertEquals(map.get("quorum1"), quorum1);
 		LinkedBlockingQueue<String> buffer = channel.getBuffer();
 		String output = buffer.poll();
-		assertEquals(output, "List of connected Quorums: quorum1");
+		assertEquals(output, "Hive quorum1");
 		output = buffer.poll();
 		assertEquals(output, null);
 	}
@@ -78,11 +78,11 @@ public class HiveTest
 
 		buffer = channel.getBuffer();
 		output = buffer.poll();
-		assertEquals(output, "List of connected Quorums: quorum1");
+		assertEquals(output, "Hive quorum1");
 		output = buffer.poll();
-		assertEquals(output, "List of connected Quorums: quorum1 quorum2");
+		assertEquals(output, "Hive quorum1 quorum2");
 		output = buffer.poll();
-		assertEquals(output, "List of connected Quorums: quorum1 quorum3 quorum2");
+		assertEquals(output, "Hive quorum1 quorum2 quorum3");
 		output = buffer.poll();
 		assertEquals(output, null);
 	}
@@ -113,7 +113,7 @@ public class HiveTest
 
 		buffer = channel.getBuffer();
 		output = buffer.poll();
-		assertEquals(output, "List of connected Quorums: quorum1 quorum2");
+		assertEquals(output, "Hive quorum1 quorum2");
 		output = buffer.poll();
 		assertEquals(output, null);
 	}

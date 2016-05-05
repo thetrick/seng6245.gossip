@@ -153,8 +153,7 @@ public class Channel implements Runnable
 
 	/*
 	 * parses the input string and performs the appropriate action such as
-	 * joining a room or saying a message
-	 * 
+	 * joining a quorum or saying a message
 	 * @param String - the string to be parsed
 	 */
 	private String parseInput(String input)
@@ -180,18 +179,18 @@ public class Channel implements Runnable
 			this._isAlive = false;
 			return "disconnectedFromServer";
 		}
-		// if the command is to make, join or exit (it is a room command)
+		// if the command is to make, join or exit (it is a quorum command)
 		else if (command.equals("make") || command.equals("join") || command.equals("exit"))
 		{
 
-			// find the next word in string and parse it as the room name
+			// find the next word in string and parse it as the quorum name
 			String quorumName = input.substring(idx + 1);
 
-			// if making a new room
+			// if making a new quorum
 			if (command.equals("make"))
 				try
 				{
-					// make a new room
+					// make a new quorum
 					Quorum newQuorum = new Quorum(quorumName, _hive, this);
 					// Constructor above automatically adds the Quorum to the
 					// list of chat _hive of the server
@@ -204,14 +203,14 @@ public class Channel implements Runnable
 					return "badQuorum " + quorumName + " " + e.getMessage();
 				}
 
-			// if joining a new room
+			// if joining a new quorum
 			else if (command.equals("join"))
 			{
-				// if there exists the room
+				// if there exists the quorum
 				if (_hive.contains(quorumName))
 					try
 					{
-						// try to join the room - what could happen is the room
+						// try to join the quorum - what could happen is the quorum
 						// could disappear at this stage, expect an IOException
 						Quorum quorumToJoin = _hive.getQuorumById(quorumName);
 						quorumToJoin.addChannel(this);
@@ -224,23 +223,23 @@ public class Channel implements Runnable
 					}
 				else
 				{
-					return "badQuorum " + quorumName + " Room name does not exist";
+					return "badQuorum " + quorumName + " quorum name does not exist";
 				}
 			}
 			else if (command.equals("exit"))
 			{
-				// remove the room from personal listings
+				// remove the quorum from personal listings
 				Quorum quorumToExit = _quorums.remove(quorumName);
 				if (quorumToExit != null)
 				{
-					// remove the user from the room
+					// remove the user from the quorum
 					quorumToExit.removeChannel(this);
-					return "disconnectedRoom " + quorumName;
+					return "disconnectedquorum " + quorumName;
 				}
-				return "badQuorum " + quorumName + " user not connected to room";
+				return "badQuorum " + quorumName + " user not connected to quorum";
 			}
 
-			// stuff for messaging a specific room
+			// stuff for messaging a specific quorum
 		}
 		else if (command.equals("message"))
 		{

@@ -185,11 +185,12 @@ public class QuorumTest
 		quorum1.updateBuffer("test-test-test");
 		Utility.pause(500);
 
-		assertEquals(channel1.getBuffer().poll(), "message q1test test-test-test");
+		String s1 = channel1.getBuffer().poll();
+		assertEquals(s1, "Message (q1test): test-test-test");
 		assertEquals(channel1.getBuffer().poll(), null);
-		assertEquals(channel2.getBuffer().poll(), "message q1test test-test-test");
+		assertEquals(channel2.getBuffer().poll(), "Message (q1test): test-test-test");
 		assertEquals(channel2.getBuffer().poll(), null);
-		assertEquals(channel3.getBuffer().poll(), "message q1test test-test-test");
+		assertEquals(channel3.getBuffer().poll(), "Message (q1test): test-test-test");
 		assertEquals(channel3.getBuffer().poll(), null);
 	}
 }
